@@ -35,7 +35,7 @@ class ConfigParameter(param.Parameter):
         
 
 class Config(param.Parameterized):
-    OAUTH_DOMAIN = ConfigParameter(str, env_prefix="xeauth", default="https://auth-dot-xenon-pmts.uc.r.appspot.com/")
+    OAUTH_DOMAIN = ConfigParameter(str, env_prefix="xeauth", default="https://xe1t-mysql.lngs.infn.it/xeauth/")
     OAUTH_CODE_PATH = ConfigParameter(str, env_prefix="xeauth", default="/device/code")
     OAUTH_TOKEN_PATH = ConfigParameter(str, env_prefix="xeauth", default="/token")
     OAUTH_CERT_PATH = ConfigParameter(str, env_prefix="xeauth", default="/.well-known/jwks.json")
