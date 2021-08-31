@@ -14,25 +14,30 @@ from .utils import url_link_button
 from .settings import config
 from .certificates import certs, XeKeySet
 
+
+from tornado.web import decode_signed_value
+
+def id_token_from_server_state():
+    id_token = pn.state.cookies.get('id_token')
+    if id_token is None or pn.config.cookie_secret is None:
+        return None
+    id_token = decode_signed_value(pn.config.cookie_secret, 'id_token', id_token)
+    if pn.state.encryption is None:
+        id_token = id_token
+    else:
+        id_token = pn.state.encryption.decrypt(id_token)
+    return id_token.decode()
+
 logger = logging.getLogger(__name__)
 
 class XeToken(param.Parameterized):
-    client_id = param.String()
+    client_id = param.String(config.DEFAULT_CLIENT_ID)
     access_token = param.String()
     id_token = param.String()
     refresh_token = param.String()
     expires = param.Number()
     scope = param.String()
     token_type = param.String("Bearer")
-
-    @property
-    def claims(self):
-        claims = self.extract_claims(self.access_token)
-        try:
-            claims.validate()
-        except:
-            return {}
-        return dict(claims)
 
     @property
     def expired(self):
@@ -164,6 +169,11 @@ class XeAuthSession(param.Parameterized):
             self.token = XeToken.from_file(self.token_file)
             if self.logged_in:
                 self.state = "Logged in"
+
+    def login_from_server(self):
+        access_token = pn.state.access_token
+        id_token = id_token_from_server_state()
+        self.token = XeToken(access_token=access_token, id_token=id_token)
 
     @property
     def scope(self):

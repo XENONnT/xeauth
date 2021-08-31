@@ -35,11 +35,11 @@ class ConfigParameter(param.Parameter):
         
 
 class Config(param.Parameterized):
-    OAUTH_DOMAIN = ConfigParameter(str, env_prefix="xeauth", default="https://xe1t-mysql.lngs.infn.it/xeauth/")
+    OAUTH_DOMAIN = ConfigParameter(str, env_prefix="xeauth", default="https://jmosbacher.us.auth0.com/oauth")
     OAUTH_CODE_PATH = ConfigParameter(str, env_prefix="xeauth", default="/device/code")
     OAUTH_TOKEN_PATH = ConfigParameter(str, env_prefix="xeauth", default="/token")
     OAUTH_CERT_PATH = ConfigParameter(str, env_prefix="xeauth", default="/.well-known/jwks.json")
-
+    AUTH0_SUBDOMAIN = ConfigParameter(str, env_prefix="xeauth", default="xenon-experiment.eu")
     DEFAULT_CLIENT_ID = ConfigParameter(str, env_prefix="xeauth", default="EC3adX50KdNHQuEmib30GCRDTFDibMK7")
     DEFAULT_AUDIENCE = ConfigParameter(str, env_prefix="xeauth", default="https://users.xenonnt.org")
     DEFAULT_SCOPE = ConfigParameter(str, env_prefix="xeauth", default="openid profile email offline_access")

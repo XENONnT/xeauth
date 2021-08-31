@@ -47,6 +47,8 @@ nbsphinx = "*"
 [tool.poetry.plugins] 
 [tool.poetry.plugins."eve_panel.auth"]
 "XenonAuth" = "xeauth.integrations.eve_panel:XenonEveAuth"
+[tool.poetry.plugins."panel.auth"]
+"xeauth" = "xeauth.integrations.panel_server:XenonPanelAuth"
 
 [tool.poetry.scripts]
 xeauth = 'xeauth.cli:main'
