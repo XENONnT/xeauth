@@ -27,7 +27,7 @@ python = ">=3.7.1"
 click = "*"
 Authlib = "^0.15.3"
 panel = "^0.12.1"
-httpx = "^0.16.1"
+httpx = "^0.19"
 appdirs = "^1.4.4"
 
 [tool.poetry.dev-dependencies]
