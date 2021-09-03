@@ -3,10 +3,20 @@ import panel as pn
 import secrets
 import httpx
 import webbrowser
+import time
+import getpass
 from xeauth.settings import config
 from .oauth import XeAuthSession, NotebookSession
+from .user_credentials import UserCredentialsAuth
 from .certificates import certs
-import time
+
+def user_login(username=None, password=None, **kwargs):
+    if username is None:
+        username = input('Username: ')
+    if password is None:
+        password = getpass.getpass("Password: ")
+    auth = UserCredentialsAuth(**kwargs)
+    return auth.login(username=username, password=password)
 
 def login(client_id=config.DEFAULT_CLIENT_ID, scopes=[], audience=config.DEFAULT_AUDIENCE,
              notify_email=None, open_browser=False, print_url=False):
@@ -15,8 +25,7 @@ def login(client_id=config.DEFAULT_CLIENT_ID, scopes=[], audience=config.DEFAULT
     scopes = list(scopes)
     session = XeAuthSession(client_id=client_id, scopes=scopes, audience=audience,  notify_email=notify_email)
     # return session
-    session.login(open_browser=open_browser, print_url=print_url)
-    return session
+    return session.login(open_browser=open_browser, print_url=print_url)
 
 def notebook_login(client_id=config.DEFAULT_CLIENT_ID, scopes=[],
                     audience=config.DEFAULT_AUDIENCE, notify_email=None, open_browser=True):

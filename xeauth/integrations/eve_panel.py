@@ -31,7 +31,6 @@ class XenonEveAuth(NotebookSession, EveAuthBase):
         self.login_requested(None)
         self.authorize()
 
-
     def set_credentials(self, **credentials):
         """Set the access credentials manually.
         """

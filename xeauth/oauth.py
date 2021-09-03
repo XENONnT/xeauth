@@ -1,77 +1,21 @@
 import param
 import panel as pn
 import httpx
-import authlib
 import time
-import json
 import webbrowser
 from contextlib import contextmanager, asynccontextmanager
 import logging
 from datetime import datetime
 import os
 
-from .utils import url_link_button
+from .utils import url_link_button, id_token_from_server_state
 from .settings import config
 from .certificates import certs, XeKeySet
+from .tokens import XeToken
 
-
-from tornado.web import decode_signed_value
-
-def id_token_from_server_state():
-    id_token = pn.state.cookies.get('id_token')
-    if id_token is None or pn.config.cookie_secret is None:
-        return None
-    id_token = decode_signed_value(pn.config.cookie_secret, 'id_token', id_token)
-    if pn.state.encryption is None:
-        id_token = id_token
-    else:
-        id_token = pn.state.encryption.decrypt(id_token)
-    return id_token.decode()
 
 logger = logging.getLogger(__name__)
 
-class XeToken(param.Parameterized):
-    client_id = param.String(config.DEFAULT_CLIENT_ID)
-    access_token = param.String()
-    id_token = param.String()
-    refresh_token = param.String()
-    expires = param.Number()
-    scope = param.String()
-    token_type = param.String("Bearer")
-
-    @property
-    def expired(self):
-        return time.time()>self.expires
-
-    @classmethod
-    def from_file(cls, path):
-        with open(path, "r") as f:
-            data = json.load(f)
-        return cls(**data)
-
-    def to_file(self, path):
-        with open(path, "w") as f:
-            json.dump(self.to_dict(), f)
-
-    def to_dict(self):
-        return {k:v for k,v in self.param.get_param_values() if not k.startswith("_")}
-
-    def refresh_tokens(self, oauth_domain, oauth_token_path, client_id, headers={}):
-        with httpx.Client(base_url=oauth_domain, headers=headers) as client:
-            r = client.post(
-                oauth_token_path,
-            headers={"content-type":"application/x-www-form-urlencoded"},
-            data={
-                "grant_type": "refresh_token",
-                "refresh_token": self.refresh_token,
-                "client_id": client_id,
-            }
-            )
-            r.raise_for_status()
-            params = r.json()
-            params["expires"] = time.time() + params.pop("expires_in", 1e6)
-            self.param.set_param(**params)    
-        
 class XeAuthFlow(param.Parameterized):
     client_id = param.String()
     device_code = param.String()
@@ -118,6 +62,8 @@ class XeAuthFlow(param.Parameterized):
             params = r.json()
             params["expires"] = time.time() + params.pop("expires_in", 1e6)
             params["client_id"] = self.client_id
+            params['oauth_domain'] = oauth_domain
+            params['oauth_token_path'] = oauth_token_path
         return XeToken(**params)
     
 
@@ -131,7 +77,6 @@ class XeAuthFlow(param.Parameterized):
             except:
                 time.sleep(self.interval)
 
-
     def perform(self, oauth_domain, oauth_code_path, oauth_token_path,
                  client_id, scope, audience, headers={}, extra_fields={}, open_browser=False, print_url=False):
         self.request_token(oauth_domain, oauth_code_path, client_id, scope, 
@@ -142,7 +87,6 @@ class XeAuthFlow(param.Parameterized):
             webbrowser.open(self.verification_uri_complete)        
         return self.await_token(oauth_domain, oauth_token_path, headers=headers)
         
-
 class XeAuthSession(param.Parameterized):
     oauth_domain = param.String(config.OAUTH_DOMAIN)
     oauth_code_path = param.String(config.OAUTH_CODE_PATH)
@@ -154,7 +98,7 @@ class XeAuthSession(param.Parameterized):
     scopes = param.List([])
     audience = param.String(config.DEFAULT_AUDIENCE)
 
-    notify_email = param.String()
+    notify_email = param.String(allow_None=True)
 
     flow = param.ClassSelector(XeAuthFlow, default=XeAuthFlow())
     keyset = param.ClassSelector(XeKeySet, default=certs)
@@ -173,7 +117,10 @@ class XeAuthSession(param.Parameterized):
     def login_from_server(self):
         access_token = pn.state.access_token
         id_token = id_token_from_server_state()
-        self.token = XeToken(access_token=access_token, id_token=id_token)
+        self.token = XeToken(access_token=access_token,
+                             id_token=id_token,
+                            )
+        return self.token
 
     @property
     def scope(self):
@@ -193,6 +140,7 @@ class XeAuthSession(param.Parameterized):
                                         open_browser=open_browser, print_url=print_url)
             if self.token:
                 self.state = "Logged in"
+        return self.token
 
     def persist_token(self):
         if self.token_file:
@@ -206,7 +154,7 @@ class XeAuthSession(param.Parameterized):
         self.state = "Disconnected"
         return True
 
-    def request_token(self,  extra_headers={}):
+    def request_token(self, extra_headers={}):
         
         self.flow.request_token(self.oauth_domain, self.oauth_code_path, 
                                 self.client_id, self.scope, self.audience, headers=extra_headers)
