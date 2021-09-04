@@ -19,11 +19,11 @@ def user_login(username=None, password=None, **kwargs):
     return auth.login(username=username, password=password)
 
 def login(client_id=config.DEFAULT_CLIENT_ID, scopes=[], audience=config.DEFAULT_AUDIENCE,
-             notify_email=None, open_browser=False, print_url=False):
+             notify_email=None, open_browser=False, print_url=False, **kwargs):
     if isinstance(scopes, str):
         scopes = scopes.split(" ")
     scopes = list(scopes)
-    session = XeAuthSession(client_id=client_id, scopes=scopes, audience=audience,  notify_email=notify_email)
+    session = XeAuthSession(client_id=client_id, scopes=scopes, audience=audience,  notify_email=notify_email, **kwargs)
     # return session
     return session.login(open_browser=open_browser, print_url=print_url)
 

@@ -5,7 +5,7 @@ import json
 from contextlib import contextmanager, asynccontextmanager
 
 from .settings import config
-
+from .utils import id_token_from_server_state
 
 class XeToken(param.Parameterized):
     client_id = param.String(config.DEFAULT_CLIENT_ID)
@@ -45,7 +45,7 @@ class XeToken(param.Parameterized):
     def to_dict(self):
         return {k:v for k,v in self.param.get_param_values() if not k.startswith("_")}
 
-    def refresh_tokens(self, client_id, headers={}):
+    def refresh_tokens(self, headers={}):
         with httpx.Client(base_url=self.oauth_domain, headers=headers) as client:
             r = client.post(
                 self.oauth_token_path,
@@ -53,7 +53,7 @@ class XeToken(param.Parameterized):
             data={
                 "grant_type": "refresh_token",
                 "refresh_token": self.refresh_token,
-                "client_id": client_id,
+                "client_id": self.client_id,
             }
             )
             r.raise_for_status()
