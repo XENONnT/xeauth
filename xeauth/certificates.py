@@ -47,7 +47,8 @@ class XeKeySet(param.Parameterized):
 
     def validate_claims(self, token, **required_claims):
         options = {k: {"value": v, "essential": True} for k,v in required_claims.items()}
-        claims = self.extract_verified_claims(token, options)
+        claims = self.extract_claims(token)
+        claims.options = options
         claims.validate()
 
     def find_by_kid(self, kid):
@@ -57,6 +58,5 @@ class XeKeySet(param.Parameterized):
 
     def __getitem__(self, kid):
         return self.find_by_kid(kid)
-
 
 certs = XeKeySet()

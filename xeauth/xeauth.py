@@ -1,3 +1,4 @@
+import os
 import param
 import panel as pn
 import secrets
@@ -19,7 +20,7 @@ def user_login(username=None, password=None, **kwargs):
     return auth.login(username=username, password=password)
 
 def login(client_id=config.DEFAULT_CLIENT_ID, scopes=[], audience=config.DEFAULT_AUDIENCE,
-             notify_email=None, open_browser=False, print_url=False, **kwargs):
+             notify_email=None, open_browser=True, print_url=True, **kwargs):
     if isinstance(scopes, str):
         scopes = scopes.split(" ")
     scopes = list(scopes)
@@ -52,3 +53,7 @@ def cli_login(client_id=config.DEFAULT_CLIENT_ID, scopes=[],
 
 def validate_claims(token, **claims):
     return certs.validate_claims(token, **claims)
+
+def clear_cache():
+    os.remove(config.CACHE_FILE)
+    

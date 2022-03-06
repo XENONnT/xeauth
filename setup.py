@@ -24,7 +24,7 @@ if os.path.exists(readme_path):
 setup(
     long_description=readme,
     name='xeauth',
-    version='0.1.7',
+    version='0.1.11',
     description='Top-level package for xeauth.',
     python_requires='>=3.7.1',
     project_urls={"homepage": "https://github.com/jmosbacher/xeauth"},
@@ -36,6 +36,6 @@ setup(
     packages=['xeauth', 'xeauth.integrations'],
     package_dir={"": "."},
     package_data={},
-    install_requires=['appdirs==1.*,>=1.4.4', 'authlib==0.*,>=0.15.3', 'click', 'httpx==0.*,>=0.16.1', 'panel==0.*,>=0.11.1'],
+    install_requires=['appdirs==1.*,>=1.4.4', 'authlib==0.*,>=0.15.3', 'click', 'httpx==0.*,>=0.19.0', 'panel==0.*,>=0.12.1'],
     extras_require={"dev": ["bumpversion", "coverage", "flake8", "invoke", "isort", "nbsphinx", "pylint", "pytest", "sphinx", "sphinx-material", "tox", "yapf"]},
 )
