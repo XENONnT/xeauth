@@ -7,6 +7,7 @@ import webbrowser
 import time
 import getpass
 from xeauth.settings import config
+from .integrations import CorrectionsHttpClient
 from .oauth import XeAuthSession, NotebookSession
 from .user_credentials import UserCredentialsAuth
 from .certificates import certs
@@ -51,9 +52,11 @@ def cli_login(client_id=config.DEFAULT_CLIENT_ID, scopes=[],
     print(f"Access token: {session.access_token}")
     print(f"ID token: {session.id_token}")
 
+cmt_login = CorrectionsHttpClient.login
+
 def validate_claims(token, **claims):
     return certs.validate_claims(token, **claims)
 
 def clear_cache():
     os.remove(config.CACHE_FILE)
-    
+

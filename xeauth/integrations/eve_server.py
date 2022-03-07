@@ -4,6 +4,7 @@ from flask import request, Response, g
 from flask import abort
 import xeauth
 
+
 class XeTokenAuth(TokenAuth):
 
     @property

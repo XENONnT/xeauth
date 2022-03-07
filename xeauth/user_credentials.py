@@ -25,7 +25,6 @@ class UserCredentialsAuth(param.Parameterized):
             audience=audience,
             scope=scope,
             client_id=self.client_id,
-        #     client_secret='IoJsagt-NnwddoN5upvZxlP4OruPjxw0okG1floleSS8cxbyGlfFIjlGKuxG6t7D',
         )
         r = httpx.post(self.AUTH_URL, data=data, headers=self.headers)
         r.raise_for_status()

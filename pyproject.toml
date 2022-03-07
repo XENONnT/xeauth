@@ -13,8 +13,7 @@ classifiers=[
     'License :: OSI Approved :: MIT License',
     'Natural Language :: English',
 
-    'Programming Language :: Python :: 3.6',
-    'Programming Language :: Python :: 3.7',
+
     'Programming Language :: Python :: 3.8',
 ]
 packages = [
@@ -23,12 +22,13 @@ packages = [
 ]
     
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8,<3.11"
 click = "*"
 Authlib = "^0.15.3"
 panel = "^0.12.1"
 httpx = "^0.19"
 appdirs = "^1.4.4"
+rframe = "^0.1.6"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"

@@ -1,4 +1,5 @@
 
+from warnings import warn
 import param
 import panel as pn
 
@@ -6,7 +7,9 @@ from ..oauth import NotebookSession
 try:
     from eve_panel.auth import EveAuthBase
 except ImportError:
-    pass
+    class EveAuthBase:
+        def __init__(self) -> None:
+            raise RuntimeError('eve_panel not installed.')
 
 class XenonEveAuth(NotebookSession, EveAuthBase):
     # session = param.ClassSelector(NotebookSession, default=NotebookSession())
