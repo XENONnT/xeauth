@@ -1012,7 +1012,7 @@ idna2008 = ["idna"]
 
 [[package]]
 name = "rframe"
-version = "0.1.7"
+version = "0.1.8"
 description = "Top-level package for rframe."
 category = "main"
 optional = false
@@ -2157,8 +2157,8 @@ rfc3986 = [
     {file = "rfc3986-1.5.0.tar.gz", hash = "sha256:270aaf10d87d0d4e095063c65bf3ddbc6ee3d0b226328ce21e036f946e421835"},
 ]
 rframe = [
-    {file = "rframe-0.1.7-py3-none-any.whl", hash = "sha256:7f1d6d6c097b88e33501347aea5c2b340cb51823eec1a8242a436c98e3ca864f"},
-    {file = "rframe-0.1.7.tar.gz", hash = "sha256:dcb24eaba1610b7366a8f2408319e55e8f7dc11e42f70b26afa424c96915a401"},
+    {file = "rframe-0.1.8-py3-none-any.whl", hash = "sha256:b2034d751bd87a72e72a2ad3d342a34776d770837b900e227d35d8cb72a889bb"},
+    {file = "rframe-0.1.8.tar.gz", hash = "sha256:522320995a8878d5a3217d9e40532c58869873eeb769949dd6ffdd30a515fb6e"},
 ]
 scipy = [
     {file = "scipy-1.8.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:87b01c7d5761e8a266a0fbdb9d88dcba0910d63c1c671bdb4d99d29f469e9e03"},
