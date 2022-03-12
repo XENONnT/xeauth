@@ -12,7 +12,6 @@ class CorrectionsHttpClient:
         self._names = names
         self._token = token
         
-        
     @classmethod
     def login(cls, scope=None, **kwargs):
         if scope is None:
@@ -33,9 +32,9 @@ class CorrectionsHttpClient:
     def __getitem__(self, name):
         if name not in self._names:
             raise KeyError(name)
-        url = f'{self._base_url}/{name}'
         headers = {'Authorization': f"Bearer {self._token}"}
-        return rframe.BaseHttpClient(url, headers)
+        url = '/'.join([self._base_url.rstrip('/'), name])
+        return rframe.HttpClient(url, headers)
     
     def __getattr__(self, attr):
         if attr not in self._names:
