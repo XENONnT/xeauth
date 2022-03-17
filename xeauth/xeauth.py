@@ -1,13 +1,8 @@
 import os
-import param
 import panel as pn
-import secrets
-import httpx
-import webbrowser
-import time
+
 import getpass
 from xeauth.settings import config
-from .integrations import CorrectionsHttpClient
 from .oauth import XeAuthSession, NotebookSession
 from .user_credentials import UserCredentialsAuth
 from .certificates import certs
@@ -52,11 +47,20 @@ def cli_login(client_id=config.DEFAULT_CLIENT_ID, scopes=[],
     print(f"Access token: {session.access_token}")
     print(f"ID token: {session.id_token}")
 
-cmt_login = CorrectionsHttpClient.login
-
 def validate_claims(token, **claims):
     return certs.validate_claims(token, **claims)
 
 def clear_cache():
     os.remove(config.CACHE_FILE)
 
+def cmt_login(scope=None, **kwargs):
+    if scope is None:
+        scope = []
+    elif isinstance(scope, str):
+        scope = [scope]
+    if not isinstance(scope, list):
+        raise ValueError('scope must be a string or list of strings')
+    scope += ['read:all']
+    audience = kwargs.pop('audience', 'https://api.cmt.xenonnt.org')
+    # base_url = kwargs.pop('base_url', DEFAULT_BASE_URL)
+    return login(audience=audience, scopes=scope, **kwargs)

@@ -28,7 +28,6 @@ Authlib = "^0.15.3"
 panel = "^0.12.1"
 httpx = "^0.19"
 appdirs = "^1.4.4"
-rframe = "^0.1.6"
 
 [tool.poetry.dev-dependencies]
 bumpversion = "*"
