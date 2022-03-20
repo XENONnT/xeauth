@@ -6,6 +6,7 @@ from contextlib import contextmanager, asynccontextmanager
 
 from .settings import config
 from .utils import id_token_from_server_state
+from .certificates import certs
 
 class XeToken(param.Parameterized):
     client_id = param.String(config.DEFAULT_CLIENT_ID)
@@ -22,6 +23,26 @@ class XeToken(param.Parameterized):
     @property
     def expired(self):
         return time.time()>self.expires
+
+    @property
+    def profile(self):
+        claims = certs.extract_verified_claims(self.id_token)
+        return {k:v for k,v in claims.items() if k not in claims.REGISTERED_CLAIMS}
+    
+    @property
+    def claims(self):
+        claims = certs.extract_verified_claims(self.access_token)
+        return {k:v for k,v in claims.items() if k in claims.REGISTERED_CLAIMS}
+
+    @property
+    def extra_claims(self):
+        claims = certs.extract_verified_claims(self.access_token)
+        return {k:v for k,v in claims.items() if k not in claims.REGISTERED_CLAIMS}
+
+    @property
+    def permissions(self):
+        claims = certs.extract_verified_claims(self.access_token)
+        return claims.get("permissions", [])
 
     @classmethod
     def from_file(cls, path):
