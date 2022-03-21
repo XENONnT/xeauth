@@ -51,14 +51,14 @@ class XeToken(param.Parameterized):
         return cls(**data)
 
     @classmethod
-    def from_panel_server(self):
+    def from_panel_server(cls):
         import panel as pn
         access_token = pn.state.access_token
         id_token = id_token_from_server_state()
-        self.token = XeToken(access_token=access_token,
+        token = cls(access_token=access_token,
                              id_token=id_token,
                             )
-        return self.token
+        return token
         
     def to_file(self, path):
         with open(path, "w") as f:

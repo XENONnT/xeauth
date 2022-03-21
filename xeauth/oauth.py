@@ -88,6 +88,8 @@ class XeAuthFlow(param.Parameterized):
         return self.await_token(oauth_domain, oauth_token_path, headers=headers)
         
 class XeAuthSession(param.Parameterized):
+    keyset = certs
+    
     oauth_domain = param.String(config.OAUTH_DOMAIN)
     oauth_code_path = param.String(config.OAUTH_CODE_PATH)
     oauth_token_path = param.String(config.OAUTH_TOKEN_PATH)
@@ -101,7 +103,7 @@ class XeAuthSession(param.Parameterized):
     notify_email = param.String(allow_None=True)
 
     flow = param.ClassSelector(XeAuthFlow, default=XeAuthFlow())
-    keyset = param.ClassSelector(XeKeySet, default=certs)
+    
     token = param.ClassSelector(XeToken, default=None)
     state = param.Selector(["Disconnected", "Logged in", "Awaiting token",
                             "Checking token ready", "Token expired"],
