@@ -2,7 +2,7 @@ import param
 import httpx
 import authlib
 from authlib import jose
-from authlib.jose.rfc7517.models import KeySet
+from authlib.jose import KeySet
 import time
 from contextlib import contextmanager
 import logging
