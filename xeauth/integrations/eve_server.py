@@ -1,9 +1,14 @@
-from eve.auth import BasicAuth, TokenAuth
-from eve.utils import config
-from flask import request, Response, g
-from flask import abort
+
+
 import xeauth
 
+try:
+    from eve.auth import TokenAuth
+    from eve.utils import config
+except ImportError:
+    class TokenAuth:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError('eve not installed.')
 
 class XeTokenAuth(TokenAuth):
 

@@ -1,13 +1,23 @@
 
 
-from tornado.auth import OAuth2Mixin
-from panel.auth import OAuthIDTokenLoginHandler
-from panel.config import config as pnconfig
+
 from xeauth.settings import config as xeconfig
 import logging
 
 log = logging.getLogger(__name__)
 
+try:
+    from tornado.auth import OAuth2Mixin
+    from panel.auth import OAuthIDTokenLoginHandler
+    from panel.config import config as pnconfig
+except ImportError:
+    class OAuthIDTokenLoginHandler:
+        def __init__(self, *args, **kwargs) -> None:
+            raise RuntimeError('panel not installed.')
+    class OAuth2Mixin:
+        def __init__(self, *args, **kwargs) -> None:
+            raise RuntimeError('panel not installed.')
+            
 class XenonPanelAuth(OAuthIDTokenLoginHandler, OAuth2Mixin):
     
     _AUDIENCE = xeconfig.DEFAULT_AUDIENCE
