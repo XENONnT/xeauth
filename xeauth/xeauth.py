@@ -2,50 +2,26 @@ import os
 import panel as pn
 
 import getpass
-from xeauth.settings import config
-from .oauth import XeAuthSession, NotebookSession
-from .user_credentials import UserCredentialsAuth
+from .settings import config
+
+# from .oauth import XeAuthSession, NotebookSession, UserCredentialsAuth
+# from .user_credentials import UserCredentialsAuth
+from .oauth import UserCredentialsAuth, XeAuthCodeRequest
 from .certificates import certs
 
-def user_login(username=None, password=None, **kwargs):
-    if username is None:
-        username = input('Username: ')
-    if password is None:
-        password = getpass.getpass("Password: ")
-    auth = UserCredentialsAuth(**kwargs)
-    return auth.login(username=username, password=password)
 
-def login(client_id=config.DEFAULT_CLIENT_ID, scopes=[], audience=config.DEFAULT_AUDIENCE,
-             notify_email=None, open_browser=True, print_url=True, **kwargs):
-    if isinstance(scopes, str):
-        scopes = scopes.split(" ")
-    scopes = list(scopes)
-    session = XeAuthSession(client_id=client_id, scopes=scopes, audience=audience,  notify_email=notify_email, **kwargs)
-    # return session
-    return session.login(open_browser=open_browser, print_url=print_url)
+user_login = UserCredentialsAuth.instance(auto_advance=True)
 
-def notebook_login(client_id=config.DEFAULT_CLIENT_ID, scopes=[],
-                    audience=config.DEFAULT_AUDIENCE, notify_email=None, open_browser=True):
-    pn.extension()
-    if isinstance(scopes, str):
-        scopes = scopes.split(" ")
-    scopes = list(scopes)
-    session = NotebookSession(client_id=client_id, scopes=scopes, audience=audience, notify_email=notify_email)
-    session.login_requested(None)
-    if open_browser:
-        session.authorize()
-    return session
 
-def cli_login(client_id=config.DEFAULT_CLIENT_ID, scopes=[], 
-                audience=config.DEFAULT_AUDIENCE, notify_email=None):
-    if isinstance(scopes, str):
-        scopes = scopes.split(" ")
-    scopes = list(scopes)
-    session = login(client_id=client_id, scopes=scopes, audience=audience, notify_email=notify_email, print_url=True)
-    print("logged in as:")
-    print(session.profile)
-    print(f"Access token: {session.access_token}")
-    print(f"ID token: {session.id_token}")
+login = XeAuthCodeRequest.instance(auto_advance=True)
+
+
+def cli_login(**kwargs):
+    token = login(**kwargs)
+    print(f"logged in as: {token.profile.get('name', 'unknown')}")
+    print(f"Access token: {token.access_token}")
+    print(f"ID token: {token.id_token}")
+
 
 def validate_claims(token, **claims):
     return certs.validate_claims(token, **claims)
@@ -53,14 +29,14 @@ def validate_claims(token, **claims):
 def clear_cache():
     os.remove(config.CACHE_FILE)
 
-def cmt_login(scope=None, **kwargs):
-    if scope is None:
-        scope = []
-    elif isinstance(scope, str):
-        scope = [scope]
-    if not isinstance(scope, list):
-        raise ValueError('scope must be a string or list of strings')
-    scope += ['read:all']
+def cmt_login(scopes=[], **kwargs):
+    if isinstance(scopes, str):
+        scopes = scopes.split(' ')
+    if not isinstance(scopes, list):
+        raise TypeError('scopes must be a list or string')
+    scopes = set(scopes)
+    scopes.add('read:all')
+    scopes =  list(scopes)
     audience = kwargs.pop('audience', 'https://api.cmt.xenonnt.org')
     # base_url = kwargs.pop('base_url', DEFAULT_BASE_URL)
-    return login(audience=audience, scopes=scope, **kwargs)
+    return login(audience=audience, scopes=scopes, **kwargs)

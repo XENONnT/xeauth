@@ -8,17 +8,18 @@ from .settings import config
 from .utils import id_token_from_server_state
 from .certificates import certs
 
+
 class XeToken(param.Parameterized):
     client_id = param.String(config.DEFAULT_CLIENT_ID)
     oauth_domain = param.String(config.OAUTH_DOMAIN)
     oauth_token_path = param.String(config.OAUTH_TOKEN_PATH)
 
-    access_token = param.String()
-    id_token = param.String()
-    refresh_token = param.String()
-    expires = param.Number()
-    scope = param.String()
-    token_type = param.String("Bearer")
+    access_token = param.String(constant=True)
+    id_token = param.String(constant=True)
+    refresh_token = param.String(constant=True)
+    expires = param.Number(constant=True)
+    scope = param.String(constant=True)
+    token_type = param.String("Bearer", constant=True)
 
     @property
     def expired(self):
@@ -29,6 +30,10 @@ class XeToken(param.Parameterized):
         claims = certs.extract_verified_claims(self.id_token)
         return {k:v for k,v in claims.items() if k not in claims.REGISTERED_CLAIMS}
     
+    @property
+    def username(self):
+        return self.profile.get('name', 'unknown')
+        
     @property
     def claims(self):
         claims = certs.extract_verified_claims(self.access_token)
@@ -67,7 +72,7 @@ class XeToken(param.Parameterized):
     def to_dict(self):
         return {k:v for k,v in self.param.get_param_values() if not k.startswith("_")}
 
-    def refresh_tokens(self, headers={}):
+    def refresh(self, headers={}):
         with httpx.Client(base_url=self.oauth_domain, headers=headers) as client:
             r = client.post(
                 self.oauth_token_path,
@@ -81,7 +86,7 @@ class XeToken(param.Parameterized):
             r.raise_for_status()
             params = r.json()
             params["expires"] = time.time() + params.pop("expires_in", 1e6)
-            self.param.set_param(**params)    
+            self.param.set_param(**params)
     
     @contextmanager
     def Client(self, *args, **kwargs):
@@ -105,3 +110,8 @@ class XeToken(param.Parameterized):
         finally:
             await client.aclose()
 
+    def __repr__(self):
+        return ("XeToken("
+               f"user={self.profile.get('name', 'unknown')}, "
+               f"access_token={self.access_token})"
+                )
