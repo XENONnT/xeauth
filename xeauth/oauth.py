@@ -27,6 +27,7 @@ class XeAuthStep(param.ParameterizedFunction):
         p['prompt_response'] = prompt_response
         next = self.perform(p)
         if isinstance(next, XeAuthStep) and p.auto_advance:
+            params = {k:v for k,v in params.items() if k in next.param.params()}
             next = next(**params)
         return next
 
