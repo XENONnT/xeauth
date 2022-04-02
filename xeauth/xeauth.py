@@ -1,5 +1,4 @@
 import os
-import panel as pn
 
 import getpass
 from .settings import config
@@ -40,3 +39,4 @@ def cmt_login(scopes=[], **kwargs):
     audience = kwargs.pop('audience', 'https://api.cmt.xenonnt.org')
     # base_url = kwargs.pop('base_url', DEFAULT_BASE_URL)
     return login(audience=audience, scopes=scopes, **kwargs)
+

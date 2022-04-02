@@ -4,7 +4,6 @@ import httpx
 import time
 import webbrowser
 import logging
-import panel as pn
 
 from datetime import datetime
 from contextlib import contextmanager, asynccontextmanager
@@ -182,6 +181,7 @@ class NotebookSession(XeAuthSession):
 
     @property
     def gui(self):
+        import panel as pn
         if self._gui is None:
             self._gui = pn.panel(self._make_gui)
         return self._gui
@@ -192,6 +192,7 @@ class NotebookSession(XeAuthSession):
         
     def login_requested(self, event):
         try:
+            import panel as pn
             self.request_token()
             logger.info("Sent request...")
             self._cb = pn.state.add_periodic_callback(self.await_token_cb,
@@ -202,6 +203,7 @@ class NotebookSession(XeAuthSession):
             print(e)
 
     def logged_in_gui(self):
+        import panel as pn
         profile = self.profile
         details = pn.Row(
             pn.pane.PNG(profile.get("picture", config.DEFAULT_AVATAR), width=60, height=60),

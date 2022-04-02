@@ -1,9 +1,8 @@
 
 from warnings import warn
 import param
-import panel as pn
 
-from ..oauth import NotebookSession
+from ..session import NotebookSession
 try:
     from eve_panel.auth import EveAuthBase
 except ImportError:
