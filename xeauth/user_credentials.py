@@ -1,33 +1,40 @@
-# import param
-# import httpx
-# import time
-# from .settings import config
-# from .token import XeToken
+import param
+import httpx
+import time
+import getpass
 
+from .oauth import XeAuthStep
+from .token import XeToken
+from .settings import config
 
-# class UserCredentialsAuth(param.Parameterized):
-#     AUTH_URL = param.String(config.OAUTH_DOMAIN.rstrip('/')+'/token')
-#     audience = param.String(config.DEFAULT_AUDIENCE)
-#     scope = param.String(config.DEFAULT_SCOPE)
-#     client_id = param.String(config.DEFAULT_CLIENT_ID)
-#     headers = param.Dict({'content-type': 'application/x-www-form-urlencoded'})
+class UserCredentialsAuth(XeAuthStep):
+    username = param.String(default=None)
+    password = param.String(default=None)
 
-#     def login(self, username, password, audience=None, scope=None):
-#         if scope is None:
-#             scope = self.scope
-#         if audience is None:
-#             audience = self.audience
+    auth_url = param.String(config.OAUTH_DOMAIN.rstrip('/')+'/token')
+    audience = param.String(config.DEFAULT_AUDIENCE)
+    scopes = param.List(config.DEFAULT_SCOPE.split(' '))
+    client_id = param.String(config.DEFAULT_CLIENT_ID)
+    headers = param.Dict({'content-type': 'application/x-www-form-urlencoded'})
 
-#         data = dict(
-#             grant_type='password',
-#             username=username,
-#             password=password,
-#             audience=audience,
-#             scope=scope,
-#             client_id=self.client_id,
-#         )
-#         r = httpx.post(self.AUTH_URL, data=data, headers=self.headers)
-#         r.raise_for_status()
-#         kwargs = r.json()
-#         kwargs['expires'] = time.time() + kwargs.pop('expires_in')
-#         return XeToken(client_id=self.client_id, **kwargs)
+    def prompt(self, p):
+        if p.username is None:
+            p.username = getpass.getuser()
+        if p.password is None:
+            p.password = getpass.getpass()
+        return p
+
+    def perform(self, p):
+        data = dict(
+            grant_type='password',
+            username=p.username,
+            password=p.password,
+            audience=p.audience,
+            scope=' '.join(p.scopes),
+            client_id=p.client_id,
+        )
+        r = httpx.post(p.auth_url, data=data, headers=p.headers)
+        r.raise_for_status()
+        kwargs = r.json()
+        kwargs['expires'] = time.time() + kwargs.pop('expires_in')
+        return XeToken(client_id=p.client_id, **kwargs)

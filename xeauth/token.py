@@ -8,7 +8,6 @@ from .settings import config
 from .utils import id_token_from_server_state
 from .certificates import certs
 
-
 class XeToken(param.Parameterized):
     client_id = param.String(config.DEFAULT_CLIENT_ID)
     oauth_domain = param.String(config.OAUTH_DOMAIN)

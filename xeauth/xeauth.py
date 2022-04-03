@@ -1,19 +1,27 @@
 import os
 
-import getpass
 from .settings import config
 
-# from .oauth import XeAuthSession, NotebookSession, UserCredentialsAuth
-# from .user_credentials import UserCredentialsAuth
-from .oauth import UserCredentialsAuth, XeAuthCodeRequest
+from .user_credentials import UserCredentialsAuth
+from .device_auth_flow import XeAuthCodeRequest
 from .certificates import certs
 
 
 user_login = UserCredentialsAuth.instance(auto_advance=True)
 
 
-login = XeAuthCodeRequest.instance(auto_advance=True)
+device_login = XeAuthCodeRequest.instance(auto_advance=True)
 
+
+def login(username=None, password=None, **kwargs):
+
+    if username is None:
+        return device_login(**kwargs)
+    
+    return user_login(username=username,
+                      password=password,
+                      **kwargs)
+    
 
 def cli_login(**kwargs):
     token = login(**kwargs)

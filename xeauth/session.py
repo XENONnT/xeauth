@@ -68,7 +68,7 @@ class XeAuthSession(param.Parameterized):
         if self.token:
             self.state = "Logged in"
         else:
-            self.token = self.flow.perform(self.oauth_domain, self.oauth_code_path, self.oauth_token_path, 
+            self.token = self.flow(self.oauth_domain, self.oauth_code_path, self.oauth_token_path, 
                                             self.client_id, self.scope, self.audience, headers=extra_headers,
                                             extra_fields=extra_fields,
                                         open_browser=open_browser, print_url=print_url)
