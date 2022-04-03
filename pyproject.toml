@@ -25,7 +25,7 @@ packages = [
 python = ">=3.8,<3.11"
 click = "*"
 Authlib = "^1.0.0"
-httpx = "^0.19"
+httpx = ">=0.19,<0.23"
 appdirs = "^1.4.4"
 param = "^1.12.0"
 
