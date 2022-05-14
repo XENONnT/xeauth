@@ -12,7 +12,7 @@ from .settings import config
 from .utils import url_link_button, id_token_from_server_state
 from .certificates import certs
 from .token import XeToken
-
+from .device_auth_flow import DeviceAuthFlow
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class XeAuthSession(param.Parameterized):
 
     notify_email = param.String(allow_None=True)
 
-    flow = param.ClassSelector()
+    flow = param.ClassSelector(default=DeviceAuthFlow, class_=DeviceAuthFlow, is_instance=False)
     
     token = param.ClassSelector(XeToken, default=None)
     state = param.Selector(["Disconnected", "Logged in", "Awaiting token",
