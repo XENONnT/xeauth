@@ -1,2 +1,2 @@
 from .eve_panel import XenonEveAuth
-from .cmt import CorrectionsHttpClient
+from .eve_server import XeTokenAuth
