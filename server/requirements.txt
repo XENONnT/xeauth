@@ -1,7 +1,7 @@
 
 Flask
 flask-mongoengine
-Authlib==0.13
+Authlib==1.1.0
 flask-wtf
 flask-bootstrap
 flask-login
