@@ -4,4 +4,4 @@ from wtforms.validators import DataRequired
 
 
 class ActivateForm(FlaskForm):
-    user_code = StringField('user_code', validators=[DataRequired()])
+    user_code = StringField("user_code", validators=[DataRequired()])

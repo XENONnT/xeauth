@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from authlib.integrations.sqla_oauth2 import (
     OAuth2ClientMixin,
     OAuth2TokenMixin,
-    OAuth2AuthorizationCodeMixin
+    OAuth2AuthorizationCodeMixin,
 )
 from authlib.oauth2.rfc8628 import DeviceCredentialMixin
 from flask_login import UserMixin
@@ -24,30 +24,28 @@ class User(db.Model, UserMixin):
 
 
 class OAuth2Client(db.Model, OAuth2ClientMixin):
-    __tablename__ = 'oauth2_client'
+    __tablename__ = "oauth2_client"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
 
 
 class OAuth2AuthorizationCode(db.Model, OAuth2AuthorizationCodeMixin):
-    __tablename__ = 'oauth2_code'
+    __tablename__ = "oauth2_code"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
 
 
 class OAuth2Token(db.Model, OAuth2TokenMixin):
-    __tablename__ = 'oauth2_token'
+    __tablename__ = "oauth2_token"
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(
-        db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'))
-    user = db.relationship('User')
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"))
+    user = db.relationship("User")
+
 
 class DeviceCredential(db.Model, DeviceCredentialMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -59,8 +57,7 @@ class DeviceCredential(db.Model, DeviceCredentialMixin):
     verification_uri_complete = db.Column(db.String(800))
     expires_in = db.Column(db.Integer)
     interval = db.Column(db.Integer)
-    expiry_date = db.Column(db.DateTime, nullable=False,
-        default=datetime.utcnow)
+    expiry_date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def get_client_id(self):
         return self.client_id
@@ -72,4 +69,4 @@ class DeviceCredential(db.Model, DeviceCredentialMixin):
         return self.user_code
 
     def is_expired(self):
-        return datetime.utcnow()>self.expiry_date
+        return datetime.utcnow() > self.expiry_date

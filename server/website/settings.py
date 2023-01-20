@@ -2,11 +2,11 @@ import os
 
 OAUTH2_JWT_ENABLED = True
 
-OAUTH2_JWT_ISS = 'https://pmts.xenonnt.org'
+OAUTH2_JWT_ISS = "https://pmts.xenonnt.org"
 OAUTH2_JWT_KEY = os.getenv("XEAUTH_JWT_SECRET_KEY")
-OAUTH2_JWT_ALG = 'HS256'
+OAUTH2_JWT_ALG = "HS256"
 
 SECRET_KEY = os.getenv("XEAUTH_SECRET_KEY").encode()
 
 GITHUB_CLIENT_ID = os.getenv("XEAUTH_GITHUB_CLIENT_ID", "")
-GITHUB_CLIENT_SECRET = os.getenv("XEAUTH_GITHUB_CLIENT_SECRET","")
+GITHUB_CLIENT_SECRET = os.getenv("XEAUTH_GITHUB_CLIENT_SECRET", "")

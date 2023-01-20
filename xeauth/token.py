@@ -8,9 +8,11 @@ from .settings import config
 from .utils import id_token_from_server_state
 from .certificates import certs
 
+
 class XeToken(param.Parameterized):
     client_id = param.String(config.DEFAULT_CLIENT_ID)
     oauth_domain = param.String(config.OAUTH_DOMAIN)
+    user_profile_url = param.String(config.USER_PROFILE_URL)
     oauth_token_path = param.String(config.OAUTH_TOKEN_PATH)
 
     access_token = param.String(constant=True)
@@ -22,26 +24,30 @@ class XeToken(param.Parameterized):
 
     @property
     def expired(self):
-        return time.time()>self.expires
+        return time.time() > self.expires
 
     @property
     def profile(self):
-        claims = certs.extract_verified_claims(self.id_token)
-        return {k:v for k,v in claims.items() if k not in claims.REGISTERED_CLAIMS}
-    
+        if self.id_token is not None:
+            claims = certs.extract_verified_claims(self.id_token)
+            return {
+                k: v for k, v in claims.items() if k not in claims.REGISTERED_CLAIMS
+            }
+        return self.fetch_profile()
+
     @property
     def username(self):
-        return self.profile.get('name', 'unknown')
-        
+        return self.profile.get("name", "unknown")
+
     @property
     def claims(self):
         claims = certs.extract_verified_claims(self.access_token)
-        return {k:v for k,v in claims.items() if k in claims.REGISTERED_CLAIMS}
+        return {k: v for k, v in claims.items() if k in claims.REGISTERED_CLAIMS}
 
     @property
     def extra_claims(self):
         claims = certs.extract_verified_claims(self.access_token)
-        return {k:v for k,v in claims.items() if k not in claims.REGISTERED_CLAIMS}
+        return {k: v for k, v in claims.items() if k not in claims.REGISTERED_CLAIMS}
 
     @property
     def permissions(self):
@@ -57,41 +63,43 @@ class XeToken(param.Parameterized):
     @classmethod
     def from_panel_server(cls):
         import panel as pn
+
         access_token = pn.state.access_token
         id_token = id_token_from_server_state()
-        token = cls(access_token=access_token,
-                             id_token=id_token,
-                            )
+        token = cls(
+            access_token=access_token,
+            id_token=id_token,
+        )
         return token
-        
+
     def to_file(self, path):
         with open(path, "w") as f:
             json.dump(self.to_dict(), f)
 
     def to_dict(self):
-        return {k:v for k,v in self.param.get_param_values() if not k.startswith("_")}
+        return {k: v for k, v in self.param.get_param_values() if not k.startswith("_")}
 
     def refresh(self, headers={}):
         with httpx.Client(base_url=self.oauth_domain, headers=headers) as client:
             r = client.post(
                 self.oauth_token_path,
-            headers={"content-type":"application/x-www-form-urlencoded"},
-            data={
-                "grant_type": "refresh_token",
-                "refresh_token": self.refresh_token,
-                "client_id": self.client_id,
-            }
+                headers={"content-type": "application/x-www-form-urlencoded"},
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": self.refresh_token,
+                    "client_id": self.client_id,
+                },
             )
             r.raise_for_status()
             params = r.json()
             params["expires"] = time.time() + params.pop("expires_in", 1e6)
             self.param.set_param(**params)
-    
+
     @contextmanager
     def Client(self, *args, **kwargs):
         kwargs["headers"] = kwargs.get("headers", {})
         kwargs["headers"]["Authorization"] = f"Bearer {self.access_token}"
-        
+
         client = httpx.Client(*args, **kwargs)
         try:
             yield client
@@ -99,7 +107,7 @@ class XeToken(param.Parameterized):
             client.close()
 
     @asynccontextmanager
-    async def AsyncClient(self, *args, **kwargs ):
+    async def AsyncClient(self, *args, **kwargs):
         kwargs["headers"] = kwargs.get("headers", {})
         kwargs["headers"]["Authorization"] = f"Bearer {self.access_token}"
 
@@ -109,8 +117,15 @@ class XeToken(param.Parameterized):
         finally:
             await client.aclose()
 
+    def fetch_profile(self):
+        with self.Client() as client:
+            r = client.get(self.user_profile_url)
+            r.raise_for_status()
+            return r.json()
+
     def __repr__(self):
-        return ("XeToken("
-               f"user={self.profile.get('name', 'unknown')}, "
-               f"access_token={self.access_token})"
-                )
+        return (
+            "XeToken("
+            f"user={self.profile.get('name', 'unknown')}, "
+            f"access_token={self.access_token})"
+        )

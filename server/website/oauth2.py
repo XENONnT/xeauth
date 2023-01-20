@@ -1,5 +1,4 @@
-from authlib.integrations.flask_oauth2 import (
-    AuthorizationServer, ResourceProtector)
+from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
 
 
 from authlib.integrations.sqla_oauth2 import (
@@ -18,22 +17,22 @@ from authlib.oidc.core.grants import (
     OpenIDHybridGrant as _OpenIDHybridGrant,
 )
 from authlib.oauth2.rfc8628 import (
-    DeviceAuthorizationEndpoint as _DeviceAuthorizationEndpoint
+    DeviceAuthorizationEndpoint as _DeviceAuthorizationEndpoint,
 )
 
 from authlib.oidc.core import UserInfo
 from werkzeug.security import gen_salt
 from .models import db, User
-from .models import OAuth2Client, OAuth2AuthorizationCode,\
-                    OAuth2Token, DeviceCredential
+from .models import OAuth2Client, OAuth2AuthorizationCode, OAuth2Token, DeviceCredential
 
 
 DUMMY_JWT_CONFIG = {
-    'key': 'secret-key',
-    'alg': 'HS256',
-    'iss': 'https://pmts.xenonnt.org',
-    'exp': 3600,
+    "key": "secret-key",
+    "alg": "HS256",
+    "iss": "https://pmts.xenonnt.org",
+    "exp": 3600,
 }
+
 
 def exists_nonce(nonce, req):
     exists = OAuth2AuthorizationCode.query.filter_by(
@@ -48,7 +47,7 @@ def generate_user_info(user, scope):
 
 def create_authorization_code(client, grant_user, request):
     code = gen_salt(48)
-    nonce = request.data.get('nonce')
+    nonce = request.data.get("nonce")
     item = OAuth2AuthorizationCode(
         code=code,
         client_id=client.client_id,
@@ -67,7 +66,7 @@ class DeviceCodeGrant(_DeviceCodeGrant):
         return DeviceCredential.query(device_code=device_code)
 
     def query_user_grant(self, user_code):
-        data = []#redis.get('oauth_user_grant:' + user_code)
+        data = []  # redis.get('oauth_user_grant:' + user_code)
         if not data:
             return None
 
@@ -82,14 +81,10 @@ class DeviceCodeGrant(_DeviceCodeGrant):
 
 class DeviceAuthorizationEndpoint(_DeviceAuthorizationEndpoint):
     def get_verification_uri(self):
-        return 'https://localhost:5000/active'
+        return "https://localhost:5000/active"
 
     def save_device_credential(self, client_id, scope, data):
-        credential = DeviceCredential(
-            client_id=client_id,
-            scope=scope,
-            **data
-        )
+        credential = DeviceCredential(client_id=client_id, scope=scope, **data)
         # credential.save()
         db.session.add(credential)
         db.session.commit()
@@ -101,7 +96,8 @@ class AuthorizationCodeGrant(_AuthorizationCodeGrant):
 
     def parse_authorization_code(self, code, client):
         item = OAuth2AuthorizationCode.query.filter_by(
-            code=code, client_id=client.client_id).first()
+            code=code, client_id=client.client_id
+        ).first()
         if item and not item.is_expired():
             return item
 
@@ -148,26 +144,27 @@ class HybridGrant(_OpenIDHybridGrant):
     def generate_user_info(self, user, scope):
         return generate_user_info(user, scope)
 
+
 authorization = AuthorizationServer()
 require_oauth = ResourceProtector()
+
 
 def config_oauth(app):
     query_client = create_query_client_func(db.session, OAuth2Client)
     save_token = create_save_token_func(db.session, OAuth2Token)
-    authorization.init_app(
-        app,
-        query_client=query_client,
-        save_token=save_token
-    )
+    authorization.init_app(app, query_client=query_client, save_token=save_token)
 
     # register device flow
     authorization.register_endpoint(DeviceAuthorizationEndpoint)
     authorization.register_grant(DeviceCodeGrant)
 
     # support all openid grants
-    authorization.register_grant(AuthorizationCodeGrant, [
-        OpenIDCode(require_nonce=True),
-    ])
+    authorization.register_grant(
+        AuthorizationCodeGrant,
+        [
+            OpenIDCode(require_nonce=True),
+        ],
+    )
     authorization.register_grant(ImplicitGrant)
     authorization.register_grant(HybridGrant)
 

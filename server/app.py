@@ -1,14 +1,18 @@
 from website.app import create_app
 from dotenv import load_dotenv
+
 load_dotenv()
 
-app = create_app({
-    'SQLALCHEMY_TRACK_MODIFICATIONS': False,
-    'SQLALCHEMY_DATABASE_URI': 'sqlite:///db.sqlite',
-})
+app = create_app(
+    {
+        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///db.sqlite",
+    }
+)
 
 
 @app.cli.command()
 def initdb():
     from website.models import db
+
     db.create_all()

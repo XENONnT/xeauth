@@ -1,14 +1,16 @@
-
 from warnings import warn
 import param
 
 from ..session import NotebookSession
+
 try:
     from eve_panel.auth import EveAuthBase
 except ImportError:
+
     class EveAuthBase:
         def __init__(self) -> None:
-            raise RuntimeError('eve_panel not installed.')
+            raise RuntimeError("eve_panel not installed.")
+
 
 class XenonEveAuth(NotebookSession, EveAuthBase):
     # session = param.ClassSelector(NotebookSession, default=NotebookSession())
@@ -34,13 +36,12 @@ class XenonEveAuth(NotebookSession, EveAuthBase):
         self.authorize()
 
     def set_credentials(self, **credentials):
-        """Set the access credentials manually.
-        """
-        for k,v in credentials.items():
-            if k in ['access_token', "id_token", "refresh_token", "expires"]:
+        """Set the access credentials manually."""
+        for k, v in credentials.items():
+            if k in ["access_token", "id_token", "refresh_token", "expires"]:
                 setattr(self.token, k, v)
             else:
                 setattr(self, k, v)
-                
+
     def credentials_view(self):
         return self.gui

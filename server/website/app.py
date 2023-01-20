@@ -19,50 +19,49 @@ backends = [Twitter, GitHub, Google]
 login_manager = LoginManager()
 
 
-
 def create_app(config=None):
     app = Flask(__name__)
 
     # load default configuration
-    app.config.from_object('website.settings')
+    app.config.from_object("website.settings")
 
     # load environment configuration
-    if 'WEBSITE_CONF' in os.environ:
-        app.config.from_envvar('WEBSITE_CONF')
+    if "WEBSITE_CONF" in os.environ:
+        app.config.from_envvar("WEBSITE_CONF")
 
     # load app sepcified configuration
     if config is not None:
         if isinstance(config, dict):
             app.config.update(config)
-        elif config.endswith('.py'):
+        elif config.endswith(".py"):
             app.config.from_pyfile(config)
-    
+
     #: you can customize this part
-    
-    @app.route('/login')
+
+    @app.route("/login")
     def index():
         tpl = '<li><a href="/login/{}">{}</a></li>'
         lis = [tpl.format(b.NAME, b.NAME) for b in backends]
-        return '<ul>{}</ul>'.format(''.join(lis))
+        return "<ul>{}</ul>".format("".join(lis))
 
     setup_app(app)
-    
+
     return app
+
 
 def handle_authorize(remote, token, user_info):
     return jsonify(user_info)
+
 
 def setup_app(app):
     db.init_app(app)
     config_oauth(app)
     oauth = OAuth(app)
-    app.register_blueprint(server_bp, url_prefix='')
-    
+    app.register_blueprint(server_bp, url_prefix="")
 
     client_bp = create_flask_blueprint(backends, oauth, handle_authorize)
-    app.register_blueprint(client_bp, url_prefix='')
-    
-    Bootstrap(app)
-    
-    login_manager.init_app(app)
+    app.register_blueprint(client_bp, url_prefix="")
 
+    Bootstrap(app)
+
+    login_manager.init_app(app)

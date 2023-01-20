@@ -12,6 +12,7 @@ from .settings import config
 
 logger = logging.getLogger(__name__)
 
+
 class XeKeySet(param.Parameterized):
     oauth_domain = param.String(config.OAUTH_DOMAIN)
     cert_path = param.String(config.OAUTH_CERT_PATH)
@@ -29,7 +30,9 @@ class XeKeySet(param.Parameterized):
         self._keyset = jose.JsonWebKey.import_key_set(keys)
 
     def extract_claims(self, token):
-        header_str = authlib.common.encoding.urlsafe_b64decode(token.split(".")[0].encode()).decode('utf-8')
+        header_str = authlib.common.encoding.urlsafe_b64decode(
+            token.split(".")[0].encode()
+        ).decode("utf-8")
         header = authlib.common.encoding.json_loads(header_str)
         key = self.find_by_kid(header["kid"])
         return jose.jwt.decode(token, key)
@@ -40,13 +43,15 @@ class XeKeySet(param.Parameterized):
             claims.options = options
             claims.validate()
             return claims
-            
+
         except Exception as e:
             logger.error(f"Exception raised while validating claims: {e}")
             return jose.JWTClaims("", "")
 
     def validate_claims(self, token, **required_claims):
-        options = {k: {"value": v, "essential": True} for k,v in required_claims.items()}
+        options = {
+            k: {"value": v, "essential": True} for k, v in required_claims.items()
+        }
         claims = self.extract_claims(token)
         claims.options = options
         claims.validate()
@@ -58,5 +63,6 @@ class XeKeySet(param.Parameterized):
 
     def __getitem__(self, kid):
         return self.find_by_kid(kid)
+
 
 certs = XeKeySet()
