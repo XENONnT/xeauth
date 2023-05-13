@@ -3,6 +3,7 @@ import httpx
 import param
 import time
 from rich.console import Console
+from .settings import config
 
 
 class GitHubApi(param.Parameterized):
@@ -75,7 +76,7 @@ class GitHubDeviceCode(param.Parameterized):
     """
     
     base_url = param.String(default='https://github.com/login', doc='Github auth URL')
-    client_id = param.String(doc='GitHub App client ID')
+    client_id = param.String(doc='GitHub App client ID', default=config.DEFAULT_CLIENT_ID)
     device_code = param.String(doc='GitHub device code')
     user_code = param.String(doc='GitHub user code')
     verification_uri = param.String(doc='GitHub verification URI')
@@ -128,12 +129,21 @@ class GithubAuth(param.Parameterized):
     oauth_token = param.String()
     
     @classmethod
-    def get_device_code(cls, client_id, scopes=None):
+    def get_device_code(cls, client_id=None, scopes=None):
+        if client_id is None:
+            client_id = config.DEFAULT_CLIENT_ID
+        
+        if client_id is None:
+            raise ValueError("client_id must be provided")
+       
         if scopes is None:
             scopes = cls.DEFAULT_SCOPES
+
         data = {'client_id': client_id}
+        
         if scopes is not None:
             data['scope'] = ' '.join(scopes)
+
         with httpx.Client(base_url=cls.BASE_URL) as client:
             response = client.post(
                 '/device/code',
