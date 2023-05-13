@@ -3,6 +3,7 @@ import json
 import os
 import getpass
 from appdirs import AppDirs
+import unittest
 
 
 DIRS = AppDirs("xeauth", "xenon")
@@ -12,60 +13,35 @@ if not os.path.isdir(CACHE_DIR):
 DEFAULT_TOKEN_FILE = os.path.join(CACHE_DIR, f"{getpass.getuser()}_xetoken.json")
 
 
-class ConfigParameter(param.Parameter):
+class EnvConfigurable(param.Parameterized):
+    """
+    A class that can be used to configure its parameters from the environment.
+    """
 
-    __slots__ = ["env_prefix", "klass"]
+    @classmethod
+    def from_env(cls, prefix="", **overrides):
+        params = {}
+        for name in cls.param.params():
+            env_name = "_".join([prefix.upper() + name.upper()])
+            val = os.getenv(env_name, None)
+            if val:
+                try:
+                    val = json.loads(val)
+                except Exception as e:
+                    pass
+                params[name] = val
 
-    def __init__(self, klass, env_prefix="", **kwargs):
-        super().__init__(**kwargs)
-        self.env_prefix = env_prefix
-        self.klass = klass
-
-    def _set_names(self, attrib_name):
-        env_name = attrib_name.upper()
-        env_name = self.env_prefix.upper() + "_" + env_name
-        if os.getenv(env_name, ""):
-            env = os.getenv(env_name, "")
-            try:
-                env = json.loads(env)
-            except Exception as e:
-                pass
-            self.default = self.klass(env)
-        super()._set_names(attrib_name)
+        params.update(overrides)
+        return cls(**params)
 
 
-class Config(param.Parameterized):
-    OAUTH_DOMAIN = ConfigParameter(
-        str, env_prefix="xeauth", default="https://xenon-experiment.eu.auth0.com/oauth"
-    )
-    OAUTH_CODE_PATH = ConfigParameter(str, env_prefix="xeauth", default="/device/code")
-    OAUTH_TOKEN_PATH = ConfigParameter(str, env_prefix="xeauth", default="/token")
-    OAUTH_CERT_PATH = ConfigParameter(
-        str, env_prefix="xeauth", default="/.well-known/jwks.json"
-    )
-    USER_PROFILE_URL = ConfigParameter(
-        str,
-        env_prefix="xeauth",
-        default="https://xenon-experiment.eu.auth0.com/userinfo",
-    )
-    AUTH0_SUBDOMAIN = ConfigParameter(
-        str, env_prefix="xeauth", default="xenon-experiment.eu"
-    )
-    DEFAULT_CLIENT_ID = ConfigParameter(
-        str, env_prefix="xeauth", default="EC3adX50KdNHQuEmib30GCRDTFDibMK7"
-    )
-    DEFAULT_AUDIENCE = ConfigParameter(
-        str, env_prefix="xeauth", default="https://users.xenonnt.org"
-    )
-    DEFAULT_SCOPE = ConfigParameter(
-        str, env_prefix="xeauth", default="openid profile email offline_access"
-    )
+class Config(EnvConfigurable):
 
-    SECRETS_SERVER = ConfigParameter(
-        str, env_prefix="xeauth", default="https://secrets.dashboards.xenonnt.org"
-    )
-
-    DEBUG = ConfigParameter(bool, env_prefix="xeauth", default=False)
+    DEFAULT_CLIENT_ID = param.String(default="4a7b1485afcfcfa45271")
+    MONGO_URI = param.String(default="mongodb://localhost:27017")
+    MONGO_USER = param.String(default="")
+    MONGO_PASSWORD = param.String(default="")
+    DEBUG = param.Boolean(default=False)
     MAX_LOG_SIZE = 20
     MAX_MESSAGES = 3
     META_FIELDS = ["_version", "_latest_version", "_etag", "_created"]
@@ -73,9 +49,19 @@ class Config(param.Parameterized):
     DEFAULT_AVATAR = (
         "http://www.sibberhuuske.nl/wp-content/uploads/2016/10/default-avatar.png"
     )
-    TOKEN_FILE = ConfigParameter(str, env_prefix="xeauth", default=DEFAULT_TOKEN_FILE)
+    TOKEN_FILE = param.String(default=DEFAULT_TOKEN_FILE)
+    GITHUB_TOKEN = param.String(default="")
+    
+    def mongo_collection(self, collection_name, database='xenonnt'):
+        try:
+            from utilix import xent_collection
+            return xent_collection(collection_name, database=database)
+        except:
+            from pymongo import MongoClient
+            client = MongoClient(self.MONGO_URI)
+            db = client[database]
+            if self.MONGO_USER and self.MONGO_PASSWORD:
+                db.authenticate(self.MONGO_USER, self.MONGO_PASSWORD)
+            return db[collection_name]
 
-    GITHUB_TOKEN = ConfigParameter(str, env_prefix="xeauth", default="")
-
-
-config = Config()
+config = Config.from_env(prefix="XEAUTH")

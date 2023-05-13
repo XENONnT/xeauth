@@ -1,8 +1,10 @@
 """Top-level package for xeauth."""
 
-from .xeauth import *
-from . import utils
-from . import admin
+from .settings import config
+from . import admin, github, user, utils
+
+__all__ = ["config", "admin", "github", "user", "utils"]
+
 
 __author__ = """Yossi Mosbacher"""
 __email__ = "joe.mosbacher@gmail.com"
