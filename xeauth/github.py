@@ -4,11 +4,61 @@ import param
 import time
 from rich.console import Console
 from .settings import config
+from .user import XenonUser
+
+
+class GitHubUser(param.Parameterized):
+    login = param.String(doc="The Github username of the user.")
+    name = param.String(doc="The full name of the user.")
+    email = param.String(doc="The email address of the user.")
+    avatar_url = param.String(doc="The URL of the user's avatar.")
+    github_id = param.Integer(doc="The Github ID of the user.")
+    organizations = param.List(doc="The Github organizations the user is a member of.", default=[])
+    teams = param.List(doc="The Github teams the user is a member of.", default=[])
+    
+    @classmethod
+    def from_github_auth(cls, auth):
+        """
+        Creates a GithubUser from a GithubAuth.
+
+        Args:
+            auth (GithubAuth): The GithubAuth.
+
+        Returns:
+            GithubUser: The GithubUser.
+        """
+        
+        api = auth.api
+        profile = api.profile
+        data = {k: v for k,v in profile.items() if k in cls.param.params()}
+        data['github_id'] = profile.pop('id', None)
+        data['organizations'] = api.organizations
+        data['teams'] = auth.api.teams
+        return cls(**data)
+
+    @classmethod
+    def from_github_token(cls, token):
+        """
+        Creates a GithubUser from a Github token.
+
+        Args:
+            token (str): The Github token.
+
+        Returns:
+            GithubUser: The GithubUser.
+        """
+        
+        from xeauth.github import GitHubAuth
+
+        auth = GitHubAuth(oauth_token=token)
+        return cls.from_github_auth(auth)
 
 
 class GitHubApi(param.Parameterized):
     API_URL = 'https://api.github.com'
-    
+
+    _cache =  param.Dict(doc="A cache of Github API responses.", default={})
+
     oauth_token = param.String()
     
     @contextmanager
@@ -23,10 +73,14 @@ class GitHubApi(param.Parameterized):
             client.close()
     
     def get(self, path, *args, **kwargs):
+        if path in self._cache:
+            return self._cache[path]
         with self.Client() as client:
             response = client.get(path, *args, **kwargs)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        self._cache[path] = data
+        return data
 
     def post(self, path, *args, **kwargs):
         with self.Client() as client:
@@ -70,6 +124,9 @@ class GitHubApi(param.Parameterized):
     def gpg_keys(self):
         return self.get('/user/gpg_keys')
 
+    @property
+    def ssh_keys(self):
+        return self.get('/user/keys')
 
 class GitHubDeviceCode(param.Parameterized):
     """GitHub device code authentication.
@@ -82,11 +139,6 @@ class GitHubDeviceCode(param.Parameterized):
     verification_uri = param.String(doc='GitHub verification URI')
     expires = param.Number(doc='Expiration time of the device code')
     interval = param.Integer(doc='Interval between polling requests')
-
-
-    @classmethod
-    def from_response_data(cls, client_id, data):
-        return cls(**data)
 
 
     def open_browser(self):
@@ -122,9 +174,9 @@ class GitHubDeviceCode(param.Parameterized):
             return data.get("access_token", None)
 
 
-class GithubAuth(param.Parameterized):
+class GitHubAuth(param.Parameterized):
     BASE_URL = 'https://github.com/login'
-    DEFAULT_SCOPES = ("read:org", "read:user")
+    DEFAULT_SCOPES = ("read:org", "read:user", "read:public_key", "user:email", "read:gpg_key")
 
     oauth_token = param.String()
     
@@ -158,13 +210,17 @@ class GithubAuth(param.Parameterized):
             return GitHubDeviceCode(**data)
         
     @classmethod
-    def device_login(cls, client_id, scopes=None, console=None):
+    def device_login(cls, client_id=None, scopes=None, console=None):
         if console is None:
             console = Console()
-        code = cls.get_device_code(client_id, scopes=scopes)
-        console.print(code.prompt)
+        
+        code = cls.get_device_code(client_id=client_id, scopes=scopes)
+        prompt = (f"Please visit [link={code.verification_uri}]"
+                  f"{code.verification_uri} [/link]"
+                  f"and enter the code: {code.user_code}")
+        console.print(prompt)
         token = code.await_token()
-        return cls(client_id=client_id, oauth_token=token)
+        return cls(oauth_token=token)
     
     @contextmanager
     def Client(self, *args, **kwargs):
@@ -180,6 +236,14 @@ class GithubAuth(param.Parameterized):
     @property
     def api(self):
         return GitHubApi(oauth_token=self.oauth_token)
+
+    @property
+    def user(self):
+        return GitHubUser.from_github_auth(self)
+    
+    @property
+    def xenon_user(self):
+        return XenonUser.from_github_username(self.api.username)
 
     @property
     def xenonnt_member(self):
