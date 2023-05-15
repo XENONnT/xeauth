@@ -48,9 +48,9 @@ class GitHubUser(param.Parameterized):
             GithubUser: The GithubUser.
         """
         
-        from xeauth.github import GithubAuth
+        from xeauth.github import GitHubAuth
 
-        auth = GithubAuth(oauth_token=token)
+        auth = GitHubAuth(oauth_token=token)
         return cls.from_github_auth(auth)
 
 
@@ -118,6 +118,9 @@ class GitHubApi(param.Parameterized):
     def gpg_keys(self):
         return self.get('/user/gpg_keys')
 
+    @property
+    def ssh_keys(self):
+        return self.get('/user/keys')
 
 class GitHubDeviceCode(param.Parameterized):
     """GitHub device code authentication.
@@ -131,10 +134,6 @@ class GitHubDeviceCode(param.Parameterized):
     expires = param.Number(doc='Expiration time of the device code')
     interval = param.Integer(doc='Interval between polling requests')
 
-
-    @classmethod
-    def from_response_data(cls, client_id, data):
-        return cls(**data)
 
     def open_browser(self):
         import webbrowser
@@ -169,9 +168,9 @@ class GitHubDeviceCode(param.Parameterized):
             return data.get("access_token", None)
 
 
-class GithubAuth(param.Parameterized):
+class GitHubAuth(param.Parameterized):
     BASE_URL = 'https://github.com/login'
-    DEFAULT_SCOPES = ("read:org", "read:user")
+    DEFAULT_SCOPES = ("read:org", "read:user", "read:public_key", "user:email", "read:gpg_key")
 
     oauth_token = param.String()
     
@@ -205,13 +204,17 @@ class GithubAuth(param.Parameterized):
             return GitHubDeviceCode(**data)
         
     @classmethod
-    def device_login(cls, client_id, scopes=None, console=None):
+    def device_login(cls, client_id=None, scopes=None, console=None):
         if console is None:
             console = Console()
-        code = cls.get_device_code(client_id, scopes=scopes)
-        console.print(code.prompt)
+        
+        code = cls.get_device_code(client_id=client_id, scopes=scopes)
+        prompt = (f"Please visit [link={code.verification_uri}]"
+                  f"{code.verification_uri} [/link]"
+                  f"and enter the code: {code.user_code}")
+        console.print(prompt)
         token = code.await_token()
-        return cls(client_id=client_id, oauth_token=token)
+        return cls(oauth_token=token)
     
     @contextmanager
     def Client(self, *args, **kwargs):
