@@ -56,7 +56,9 @@ class GitHubUser(param.Parameterized):
 
 class GitHubApi(param.Parameterized):
     API_URL = 'https://api.github.com'
-    
+
+    _cache =  param.Dict(doc="A cache of Github API responses.", default={})
+
     oauth_token = param.String()
     
     @contextmanager
@@ -71,10 +73,14 @@ class GitHubApi(param.Parameterized):
             client.close()
     
     def get(self, path, *args, **kwargs):
+        if path in self._cache:
+            return self._cache[path]
         with self.Client() as client:
             response = client.get(path, *args, **kwargs)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        self._cache[path] = data
+        return data
 
     def post(self, path, *args, **kwargs):
         with self.Client() as client:
