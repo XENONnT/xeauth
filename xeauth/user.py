@@ -1,7 +1,6 @@
 
 import param
 
-from .github import GithubAuth
 from .settings import config
 
 
@@ -12,7 +11,7 @@ class XenonUser(param.Parameterized):
     
     username = param.String(doc="The Xenon username of the user.")
     email = param.String(doc="The email address of the user.")
-    full_name = param.String(doc="The full name of the user.", default=None)
+    name = param.String(doc="The full name of the user.", default=None)
     github = param.String(doc="The Github username of the user.", default=None)
     cell = param.String(doc="The cell phone number of the user.", default=None)
     groups = param.List(doc="The groups the user is a member of.", default=[])
@@ -24,33 +23,28 @@ class XenonUser(param.Parameterized):
     active = param.Boolean(doc="Whether the user is active.", default=None)
     first_name = param.String(doc="The first name of the user.", default=None)
     last_name = param.String(doc="The last name of the user.", default=None)
-    github_orgs = param.List(doc="The Github organizations the user is a member of.", default=[])
-    github_teams = param.List(doc="The Github teams the user is a member of.", default=[])
+
 
     @classmethod
-    def from_github_token(cls, token):
+    def from_github_username(cls, username):
         """
-        Creates a XenonUser from a Github token.
+        Creates a XenonUser from a Github username.
 
         Args:
-            token (str): The Github token.
+            username (str): The Github username.
 
         Returns:
             XenonUser: The XenonUser.
         """
         
-        
+
         users_db = config.mongo_collection('users')
-        api = GithubAuth(oauth_token=token).api
-        github_user = api.username
-        teams = api.teams
-        orgs = api.organizations
-        data = users_db.find_one({'github': github_user})
+    
+        data = users_db.find_one({'github': username})
         if data is None:
-            raise ValueError(f'User {github_user} not found in Xenon database.')
-        data['full_name'] = data.get('name', data.get('first_name', '') + ' ' + data.get('last_name', ''))
+            raise ValueError(f'User {username} not found in Xenon database.')
+        if not data.get('name'):
+            data['name'] = data.get('first_name', '') + ' ' + data.get('last_name', '')
         data['active'] = data.get('active', False) in [True, 'True', 'true']
-        data['github_teams'] = teams
-        data['github_orgs'] = orgs
         data = {k: v for k,v in data.items() if k in cls.param.params()}
         return cls(**data)

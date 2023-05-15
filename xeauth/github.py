@@ -4,6 +4,54 @@ import param
 import time
 from rich.console import Console
 from .settings import config
+from .user import XenonUser
+
+
+class GitHubUser(param.Parameterized):
+    login = param.String(doc="The Github username of the user.")
+    name = param.String(doc="The full name of the user.")
+    email = param.String(doc="The email address of the user.")
+    avatar_url = param.String(doc="The URL of the user's avatar.")
+    github_id = param.Integer(doc="The Github ID of the user.")
+    organizations = param.List(doc="The Github organizations the user is a member of.", default=[])
+    teams = param.List(doc="The Github teams the user is a member of.", default=[])
+    
+    @classmethod
+    def from_github_auth(cls, auth):
+        """
+        Creates a GithubUser from a GithubAuth.
+
+        Args:
+            auth (GithubAuth): The GithubAuth.
+
+        Returns:
+            GithubUser: The GithubUser.
+        """
+        
+        api = auth.api
+        profile = api.profile
+        data = {k: v for k,v in profile.items() if k in cls.param.params()}
+        data['github_id'] = profile.pop('id', None)
+        data['organizations'] = api.organizations
+        data['teams'] = auth.api.teams
+        return cls(**data)
+
+    @classmethod
+    def from_github_token(cls, token):
+        """
+        Creates a GithubUser from a Github token.
+
+        Args:
+            token (str): The Github token.
+
+        Returns:
+            GithubUser: The GithubUser.
+        """
+        
+        from xeauth.github import GithubAuth
+
+        auth = GithubAuth(oauth_token=token)
+        return cls.from_github_auth(auth)
 
 
 class GitHubApi(param.Parameterized):
@@ -87,7 +135,6 @@ class GitHubDeviceCode(param.Parameterized):
     @classmethod
     def from_response_data(cls, client_id, data):
         return cls(**data)
-
 
     def open_browser(self):
         import webbrowser
@@ -180,6 +227,14 @@ class GithubAuth(param.Parameterized):
     @property
     def api(self):
         return GitHubApi(oauth_token=self.oauth_token)
+
+    @property
+    def user(self):
+        return GitHubUser.from_github_auth(self)
+    
+    @property
+    def xenon_user(self):
+        return XenonUser.from_github_username(self.api.username)
 
     @property
     def xenonnt_member(self):
