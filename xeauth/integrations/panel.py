@@ -19,3 +19,4 @@ class XenonLoginHandler(GithubLoginHandler):
         auth = GitHubAuth(oauth_token=access_token)
         if not auth.xenonnt_member:
             raise HTTPError(500, f"Github authentication failed. You are not a member of the XENONnT organization.")
+        return super()._on_auth(user_info, access_token, refresh_token)
