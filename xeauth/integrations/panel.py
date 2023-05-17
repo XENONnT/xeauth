@@ -13,7 +13,7 @@ class XenonLoginHandler(GithubLoginHandler):
     """Xenon login handler.
     """
     
-    _SCOPE = " ".join(["read:org", "read:user", "read:public_key", "user:email", "read:gpg_key"])
+    _SCOPE = ["read:org", "read:user", "read:public_key", "user:email", "read:gpg_key"]
 
     def _on_auth(self, user_info, access_token, refresh_token=None):
         auth = GitHubAuth(oauth_token=access_token)
