@@ -45,10 +45,8 @@ sphinx-material = "*"
 nbsphinx = "*"
 
 [tool.poetry.plugins] 
-[tool.poetry.plugins."eve_panel.auth"]
-"XenonAuth" = "xeauth.integrations.eve_panel:XenonEveAuth"
 [tool.poetry.plugins."panel.auth"]
-"xeauth" = "xeauth.integrations.panel_server:XenonPanelAuth"
+"xeauth" = "xeauth.integrations.panel:XenonLoginHandler"
 
 [tool.poetry.scripts]
 xeauth = 'xeauth.cli:main'
